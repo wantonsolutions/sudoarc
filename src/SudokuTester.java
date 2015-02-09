@@ -23,11 +23,11 @@ public class SudokuTester {
 		/** Easy Sudokus */
 		// This Sudoku is already solved, obviously it can be "solved" by AC alone.
 		test(acSolver, "solved", true, true); // Time: 0s (bonus 0s)
-		/*
 		// This Sudoku can be solved by AC alone
 		test(acSolver, "easy", true, true); // Time: 0s (bonus 0s)
 		// This Sudoku can not be solved by AC alone, it requires domain splitting.
 		test(acSolver, "hard", true, true); // Time: 0s (bonus 0s)
+		/*
 		// Evil level Sudoku from www.websudoku.com, it is difficult for people, easy for AC+domain splitting
 		test(acSolver, "evil", true, false); // Time: 0s (bonus 0s)
 		// Sudoku from Sudoku enthusiast (http://www.flickr.com/photos/npcomplete/2384354604/), requires domain splitting
