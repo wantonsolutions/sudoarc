@@ -6,6 +6,7 @@ import java.util.Stack;
 public class SudokuSolver {
 
 	private final int BOARD_SIZE = 9;
+	private final int SAMPLE_FREQUENCY = 2000;
 
 	/**
 	 * @return names of the authors and their student IDs (1 per line).
@@ -24,51 +25,64 @@ public class SudokuSolver {
 	public int[][] solve(int[][] board) {
 		// TODO write it;
 
-        // this stack will be used for the DFS traversal of boards
-        Stack<Arc[][]> stack = new Stack<Arc[][]>();
-        stack.push(initArcs(board));
+		// this stack will be used for the DFS traversal of boards
+		Stack<Arc[][]> stack = new Stack<Arc[][]>();
+		stack.push(initArcs(board));
+		int sampler = 0;
 
-        while(!stack.empty()){
-            Arc[][] arcs = stack.pop();
+		while(!stack.empty()){
+			Arc[][] arcs = stack.pop();
 
-            // make current arc array consistent
-            while(!isClean(arcs)){
-                arcConsistency(arcs);
-            }
+			// make current arc array consistent
+			while(!isClean(arcs)){
+				arcConsistency(arcs);
+			}
+			//check if a bad assumption was made by splitting domains
+			if(!totalConsistancy(arcs)){
+				sampler++;
+				if((sampler%SAMPLE_FREQUENCY) == 0){
+					printBoard(arcs);
+				}
+				//System.out.println("bad split dropping board");
+				continue;
+			}
 
-            // check if domain must be split
-            if(!complete(arcs)){
-                //System.out.println("Not complete, requires domain split");
+			// check if domain must be split
+			if(!complete(arcs)){
+				//System.out.println("Not complete, requires domain split");
 
-                // find the arc position greater with domain size greater than 1
-                // shouldn't need a null check because we do a complete check beforehand
-                int[] splitPosition = findLargeDomain(arcs);
-                int i = splitPosition[0];
-                int j = splitPosition[1];
+				// find the arc position greater with domain size greater than 1
+				// shouldn't need a null check because we do a complete check beforehand
+				boolean[][] splits = splitableDomains(arcs);
+			       	for(int i =0;i<BOARD_SIZE;i++){
+					for(int j =0;j<BOARD_SIZE;j++){
+						if(splits[i][j]){
+							Arc[] splitArc = arcs[i][j].split();
+							dirtyEffected(arcs, i,j);
+							// create the left and right arc arrays
+							Arc[][] leftArcs = clone(arcs);
+							leftArcs[i][j] = splitArc[0];
+							Arc[][] rightArcs= clone(arcs);
+							rightArcs[i][j] = splitArc[1];
 
-                // get the split arc array
-                Arc[] splitArc = arcs[i][j].split();
-		//dirtyEffected(arcs, i,j);
-                // create the left and right arc arrays
-                Arc[][] leftArcs = arcs;
-                leftArcs[i][j] = splitArc[0];
-                Arc[][] rightArcs= arcs;
-                rightArcs[i][j] = splitArc[1];
+							if(consistant(leftArcs,i,j)){
+								//System.out.println("push left");
+								stack.push(leftArcs);
+							}
+							if(consistant(rightArcs,i,j)){
+								//System.out.println("push right");
+								stack.push(rightArcs);
+							}
+						}
+					}
+				}
+			} else {
+				return arcToIntArray(arcs);
+			}
 
-		if(consistant(leftArcs,i,j)){
-                	stack.push(leftArcs);
 		}
-		if(consistant(rightArcs,i,j)){
-                	stack.push(rightArcs);
-		}
-                continue;
-            } else{
-                return arcToIntArray(arcs);
-            }
 
-        }
-
-        return null;
+		return null;
 
 	}
 
@@ -82,10 +96,10 @@ public class SudokuSolver {
 					//if the size of the domain is now 1 set the actual board
 					if(arcs[i][j].dom.size() == 1){
 						//System.out.println("setting ["+i+"]["+j+"]");
-						//board[i][j] = arcs[i][j].dom.get(0);
-                        arcs[i][j].value = arcs[i][j].dom.get(0);
+						arcs[i][j].value = arcs[i][j].dom.get(0);
 					}
 				}
+
 				arcs[i][j].setDirty(false);
 			}
 		}
@@ -181,12 +195,23 @@ public class SudokuSolver {
 			for(int l = (j - j%3); l < (j - j%3 +3); l++){
 				//System.out.println("k = "+k+" l = "+l);
 				if(k!=i && l!=j){
-				       arcs[k][l].setDirty(true);
+					arcs[k][l].setDirty(true);
 				}
 			}
 		}
-        return arcs;
+		return arcs;
 	}		
+
+	private boolean totalConsistancy(Arc[][] arcs){
+		for(int i=0;i<BOARD_SIZE;i++){
+			for(int j=0;j<BOARD_SIZE;j++){
+				if(!consistant(arcs,i,j)){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
 	/**
 	 * returns true if the value of the given position is valid with respect to the rest of the board
@@ -196,20 +221,25 @@ public class SudokuSolver {
 	 * @return true if the given arc has a valid value false otherwise
 	 */
 	private boolean consistant(Arc[][] arcs, int i, int j){
+		if(arcs[i][j].dom.size() <=0 ){
+			//System.out.println("incons");
+			return false;
+		}
 		if(arcs[i][j].value == 0){
-			System.out.println("cons");
+			//System.out.println("cons");
 			return true;
 		}
+
 		for(int k=0;k<BOARD_SIZE;k++){
 			if(k!=j){
 				if(arcs[i][k].value == arcs[i][j].value){
-					System.out.println("incons");
+					//System.out.println("incons");
 					return false;
 				}
 			}
 			if(k!=i){
 				if(arcs[k][j].value == arcs[i][j].value){
-					System.out.println("incons");
+					//System.out.println("incons");
 					return false;
 				}
 			}
@@ -219,13 +249,13 @@ public class SudokuSolver {
 				//System.out.println("k = "+k+" l = "+l);
 				if(k!=i && l!=j){
 					if(arcs[k][l].value == arcs[i][j].value){
-						System.out.println("incons");
+						//System.out.println("incons");
 						return false;
 					}
 				}
 			}
 		}
-        return true;
+		return true;
 	}		
 
 
@@ -245,7 +275,7 @@ public class SudokuSolver {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Preforms a completion check on the board. The board is clean if all the arcs cannot be reduced any more
 	 *
@@ -289,9 +319,34 @@ public class SudokuSolver {
 				}
 			}
 		}
-        return arcs;
+		return arcs;
 	}
+
+	private Arc[][] clone(Arc[][] board){
+		Arc[][] arcs = new Arc[BOARD_SIZE][BOARD_SIZE];
+		for(int i=0;i<BOARD_SIZE;i++){
+			for(int j=0;j<BOARD_SIZE;j++){
+				arcs[i][j] = board[i][j].clone();
+			}
+		}
+		return arcs;
+	}
+			
 	
+	private boolean[][] splitableDomains(Arc[][] arcs){
+		boolean[][] splits = new boolean[BOARD_SIZE][BOARD_SIZE];
+		for(int i=0; i<BOARD_SIZE; i++){
+			for(int j=0; j<BOARD_SIZE; j++){
+				if(arcs[i][j].dom.size() > 1){
+					splits[i][j] = true;
+				} else {
+					splits[i][j] = false;
+				}
+			}
+		}
+		return splits;
+	}
+
 	private void printArcs(Arc[][] arcs){
 		for(int i=0;i<BOARD_SIZE;i++){
 			for(int j=0;j<BOARD_SIZE;j++){
@@ -300,29 +355,35 @@ public class SudokuSolver {
 		}
 	}
 
-    // Finds a domain in a given arc array with size > 1
-    private int[] findLargeDomain(Arc[][] arcs){
-        int[] returnArray = new int[2];
-        for(int i=0; i<BOARD_SIZE; i++){
-            for(int j=0; j<BOARD_SIZE; j++){
-                if(arcs[i][j].dom.size() > 1){
-                    returnArray[0] = i;
-                    returnArray[1] = j;
-                    return returnArray;
-                }
-            }
-        }
-        return null;
-    }
+	private int[][] arcToIntArray(Arc[][] arcs){
+		int[][] returnArray = new int[BOARD_SIZE][BOARD_SIZE];
+		for(int i=0; i<BOARD_SIZE; i++) {
+			for (int j=0; j<BOARD_SIZE; j++) {
+				returnArray[i][j] = arcs[i][j].value;
+			}
+		}
+		return returnArray;
+	}
 
-    private int[][] arcToIntArray(Arc[][] arcs){
-        int[][] returnArray = new int[BOARD_SIZE][BOARD_SIZE];
-        for(int i=0; i<BOARD_SIZE; i++) {
-            for (int j=0; j<BOARD_SIZE; j++) {
-                returnArray[i][j] = arcs[i][j].value;
-            }
-        }
-        return returnArray;
-    }
+	private void printBoard(Arc[][] arcs){
+		for(int i=0; i<BOARD_SIZE; i++) {
+			for (int j=0; j<BOARD_SIZE; j++) {
+				if(arcs[i][j].value == 0){
+					System.out.print(" ");
+				} else {
+					System.out.print(arcs[i][j].value);
+				}
+				if( (j > 0 && j < 8) && (j + 1)%3 == 0){
+					System.out.print("|");
+				}
+			}
+			System.out.println("");
+			if( (i > 0 && i < 8) && (i + 1)%3 == 0){
+				System.out.print("-----------\n");
+			}
+		}
+		System.out.println("\n");
+	}
+
 
 }

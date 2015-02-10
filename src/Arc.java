@@ -23,6 +23,17 @@ class Arc {
 			dom.add(domain[i]);
 		}
 	}
+
+	public Arc clone(){
+		Integer[] d = this.dom.toArray(new Integer[this.dom.size()]);
+		int [] di = new int[this.dom.size()];
+		for(int i=0;i<this.dom.size();i++){
+			di[i] = d[i].intValue();
+		}
+		Arc cl = new Arc(this.value,di,this.dom.size());
+		cl.setDirty(this.getDirty());
+		return cl;
+	}
 	
 	public Arc[] split() {
 		Arc[] div = new Arc[2];
@@ -46,7 +57,7 @@ class Arc {
 			if(div[1].dom.size() == 1){
 				div[1].value = div[1].dom.get(0).intValue();
 			}
-			System.out.println("left " + div[0].toString() + "\tright" + div[1].toString());
+			//System.out.println("left " + div[0].toString() + "\tright" + div[1].toString());
 		}
 		return div;
 	}
