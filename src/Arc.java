@@ -19,18 +19,18 @@ class Arc {
 		this.value = value;
 		dom = new ArrayList<Integer>(domainSize);
 		dirty=false;
-		for(int i =1;i<domainSize;i++){
+		for(int i =0;i<domainSize;i++){
 			dom.add(domain[i]);
 		}
 	}
 	
 	public Arc[] split() {
 		Arc[] div = new Arc[2];
-		if(this.dom.size() == 1){
+		if(this.dom.size() <= 1){
 			return null;
 		} else {
 			int []d1 = new int [this.dom.size()/2];
-			int []d2 = new int [this.dom.size()/2 + this.dom.size() %2];
+			int []d2 = new int [this.dom.size()/2 + (this.dom.size() %2)];
 			for(int i =0;i<this.dom.size();i++){
 				if(i<this.dom.size()/2){
 					d1[i] = this.dom.get(i).intValue();
@@ -39,15 +39,14 @@ class Arc {
 				}
 			}
 			div[0] = new Arc(this.value, d1, this.dom.size()/2);
-			div[1] = new Arc(this.value, d2, this.dom.size()/2 + this.dom.size() %2);
+			div[1] = new Arc(this.value, d2, this.dom.size()/2 + (this.dom.size() %2));
 			if(div[0].dom.size() == 1){
-				System.out.println("setting split value " + div[0].dom.get(0).intValue());
 				div[0].value = div[0].dom.get(0).intValue();
 			}
 			if(div[1].dom.size() == 1){
 				div[1].value = div[1].dom.get(0).intValue();
-				System.out.println("setting split value " + div[1].dom.get(0).intValue());
 			}
+			System.out.println("left " + div[0].toString() + "\tright" + div[1].toString());
 		}
 		return div;
 	}
@@ -63,7 +62,7 @@ class Arc {
 	}
 
 	public String toString(){
-		String arc = "[";
+		String arc = "("+this.value+")[";
 		Iterator itr = dom.iterator();
 		while(itr.hasNext()){
 			arc = arc + itr.next().toString();

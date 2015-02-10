@@ -38,7 +38,7 @@ public class SudokuSolver {
 
             // check if domain must be split
             if(!complete(arcs)){
-                System.out.println("Not complete, requires domain split");
+                //System.out.println("Not complete, requires domain split");
 
                 // find the arc position greater with domain size greater than 1
                 // shouldn't need a null check because we do a complete check beforehand
@@ -48,16 +48,19 @@ public class SudokuSolver {
 
                 // get the split arc array
                 Arc[] splitArc = arcs[i][j].split();
-
+		//dirtyEffected(arcs, i,j);
                 // create the left and right arc arrays
                 Arc[][] leftArcs = arcs;
                 leftArcs[i][j] = splitArc[0];
                 Arc[][] rightArcs= arcs;
                 rightArcs[i][j] = splitArc[1];
 
-                stack.push(leftArcs);
-                stack.push(rightArcs);
-
+		if(consistant(leftArcs,i,j)){
+                	stack.push(leftArcs);
+		}
+		if(consistant(rightArcs,i,j)){
+                	stack.push(rightArcs);
+		}
                 continue;
             } else{
                 return arcToIntArray(arcs);
@@ -183,6 +186,46 @@ public class SudokuSolver {
 			}
 		}
         return arcs;
+	}		
+
+	/**
+	 * returns true if the value of the given position is valid with respect to the rest of the board
+	 * @param arcs, the board
+	 * @param i, the row of the arc to check
+	 * @param j, the column of the arc to check
+	 * @return true if the given arc has a valid value false otherwise
+	 */
+	private boolean consistant(Arc[][] arcs, int i, int j){
+		if(arcs[i][j].value == 0){
+			System.out.println("cons");
+			return true;
+		}
+		for(int k=0;k<BOARD_SIZE;k++){
+			if(k!=j){
+				if(arcs[i][k].value == arcs[i][j].value){
+					System.out.println("incons");
+					return false;
+				}
+			}
+			if(k!=i){
+				if(arcs[k][j].value == arcs[i][j].value){
+					System.out.println("incons");
+					return false;
+				}
+			}
+		}
+		for(int k = (i - i%3); k < (i - i%3 +3); k++){
+			for(int l = (j - j%3); l < (j - j%3 +3); l++){
+				//System.out.println("k = "+k+" l = "+l);
+				if(k!=i && l!=j){
+					if(arcs[k][l].value == arcs[i][j].value){
+						System.out.println("incons");
+						return false;
+					}
+				}
+			}
+		}
+        return true;
 	}		
 
 
