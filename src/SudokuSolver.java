@@ -56,22 +56,26 @@ public class SudokuSolver {
 				boolean[][] splits = splitableDomains(arcs);
 			       	for(int i =0;i<BOARD_SIZE;i++){
 					for(int j =0;j<BOARD_SIZE;j++){
-						if(splits[i][j]){
-							Arc[] splitArc = arcs[i][j].split();
-							dirtyEffected(arcs, i,j);
-							// create the left and right arc arrays
-							Arc[][] leftArcs = clone(arcs);
-							leftArcs[i][j] = splitArc[0];
-							Arc[][] rightArcs= clone(arcs);
-							rightArcs[i][j] = splitArc[1];
+						//push domains in decreasing order of size
+						for(int k=BOARD_SIZE;k>1;k--){
+							if(splits[i][j] && arcs[i][j].dom.size() == k){
+								Arc[] splitArc = arcs[i][j].split();
+								dirtyEffected(arcs, i,j);
+								// create the left and right arc arrays
+								Arc[][] leftArcs = clone(arcs);
+								leftArcs[i][j] = splitArc[0];
+								Arc[][] rightArcs= clone(arcs);
+								rightArcs[i][j] = splitArc[1];
 
-							if(consistant(leftArcs,i,j)){
-								//System.out.println("push left");
-								stack.push(leftArcs);
-							}
-							if(consistant(rightArcs,i,j)){
-								//System.out.println("push right");
-								stack.push(rightArcs);
+								if(consistant(leftArcs,i,j)){
+									//System.out.println("push left");
+									stack.push(leftArcs);
+								}
+								if(consistant(rightArcs,i,j)){
+									//System.out.println("push right");
+									stack.push(rightArcs);
+								}
+								splits[i][j] = false;
 							}
 						}
 					}
