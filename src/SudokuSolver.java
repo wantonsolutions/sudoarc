@@ -32,20 +32,35 @@ public class SudokuSolver {
             Arc[][] arcs = stack.pop();
 
             // make current board consistent
-            while(!isClean()){
+            while(!isClean(arcs)){
                 arcConsistency(arcs);
             }
 
             // check if domain must be split
             if(!complete(arcs)){
                 System.out.println("Not complete, requires domain split");
-                stack.push(splitDomain(arcs)[0]);
-                stack.push(splitDomain(arcs)[1]);
 
-                // TODO: convert Arc[][] into int[][]
-                return board;
+                // find the arc position greater with domain size greater than 1
+                // shouldn't need a null check because we do a complete check beforehand
+                int[] splitPosition = findLargeDomain(arcs);
+                int i = splitPosition[0];
+                int j = splitPosition[1];
+
+                // get the split arc array
+                Arc[] splitArc = arcs[i][j].split();
+
+                // create the left and right arc arrays
+                Arc[][] leftArcs = arcs;
+                leftArcs[i][j] = splitArc[0];
+                Arc[][] rightArcs= arcs;
+                rightArcs[i][j] = splitArc[1];
+
+                stack.push(leftArcs);
+                stack.push(rightArcs);
+
+                return arcToIntArray(arcs);
             } else{
-                return board;
+                return arcToIntArray(arcs);
             }
 
         }
@@ -53,7 +68,6 @@ public class SudokuSolver {
         return null;
 
 	}
-
 
 	private void arcConsistency(Arc[][] arcs){
 		for(int i=0;i<BOARD_SIZE;i++){
@@ -145,9 +159,6 @@ public class SudokuSolver {
 		return modified;
 
 	}
-
-
-
 
 	/*
 	 * dirtyEffected marks all arcs that have had a dependent arc [i][j] modified.
@@ -246,10 +257,29 @@ public class SudokuSolver {
 		}
 	}
 
-    private Arc[][][] splitDomain(Arc[][] arcs){
-        // split the domain by finding
+    // Finds a domain in a given arc array with size > 1
+    private int[] findLargeDomain(Arc[][] arcs){
+        int[] returnArray = new int[2];
+        for(int i=0; i<BOARD_SIZE; i++){
+            for(int j=0; j<BOARD_SIZE; i++){
+                if(arcs[i][j].dom.size() > 1){
+                    returnArray[0] = i;
+                    returnArray[1] = j;
+                    return returnArray;
+                }
+            }
+        }
         return null;
     }
 
+    private int[][] arcToIntArray(Arc[][] arcs){
+        int[][] returnArray = new int[BOARD_SIZE][BOARD_SIZE];
+        for(int i=0; i<BOARD_SIZE; i++) {
+            for (int j=0; j < BOARD_SIZE; i++) {
+                returnArray[i][j] = arcs[i][j].value;
+            }
+        }
+        return returnArray;
+    }
 
 }
