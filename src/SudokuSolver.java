@@ -1,16 +1,18 @@
+import java.util.Stack;
+
 /**
  * Place for your code.
  */
 public class SudokuSolver {
-	private Arc[][] arcs;
 
 	private final int BOARD_SIZE = 9;
+
 	/**
 	 * @return names of the authors and their student IDs (1 per line).
 	 */
 	public String authors() {
 		// TODO write it;
-		return "Stewart Grant";
+		return "Stewart Grant ()\nAlbert Kim (20567111)";
 	}
 
 	/**
@@ -21,26 +23,50 @@ public class SudokuSolver {
 	 */
 	public int[][] solve(int[][] board) {
 		// TODO write it;
-		initArcs(board);
-		//printArcs();
-		while(!complete(board) && !clean()){
-			arcConsistancy(board);
-		}
-		return board;
+
+        // this stack will be used for the DFS traversal of boards
+        Stack<Arc[][]> stack = new Stack<Arc[][]>();
+        stack.push(initArcs(board));
+
+        while(!stack.empty()){
+            Arc[][] arcs = stack.pop();
+
+            // make current board consistent
+            while(!isClean()){
+                arcConsistency(arcs);
+            }
+
+            // check if domain must be split
+            if(!complete(arcs)){
+                System.out.println("Not complete, requires domain split");
+                stack.push(splitDomain(arcs)[0]);
+                stack.push(splitDomain(arcs)[1]);
+
+                // TODO: convert Arc[][] into int[][]
+                return board;
+            } else{
+                return board;
+            }
+
+        }
+
+        return null;
+
 	}
 
 
-	private void arcConsistancy(int[][]board){
+	private void arcConsistency(Arc[][] arcs){
 		for(int i=0;i<BOARD_SIZE;i++){
 			for(int j=0;j<BOARD_SIZE;j++){
 				if(arcs[i][j].getDirty() && arcs[i][j].dom.size() > 1){
-					rowCondition(i,j);
-					columnCondition(i,j);
-					sectorCondition(i,j);
+					rowCondition(arcs, i,j);
+					columnCondition(arcs, i,j);
+					sectorCondition(arcs, i,j);
 					//if the size of the domain is now 1 set the actual board
 					if(arcs[i][j].dom.size() == 1){
 						//System.out.println("setting ["+i+"]["+j+"]");
-						board[i][j] = arcs[i][j].dom.get(0);
+						//board[i][j] = arcs[i][j].dom.get(0);
+                        arcs[i][j].value = arcs[i][j].dom.get(0);
 					}
 				}
 				arcs[i][j].setDirty(false);
@@ -49,7 +75,7 @@ public class SudokuSolver {
 
 	}
 
-	private void sectorCondition(int i, int j){
+	private void sectorCondition(Arc[][] arcs, int i, int j){
 		boolean modified = false;
 		for(int k = (i - i%3); k < (i - i%3 +3); k++){
 			for(int l = (j - j%3); l < (j - j%3 +3); l++){
@@ -62,11 +88,11 @@ public class SudokuSolver {
 			}
 		}
 		if(modified){
-			dirtyEffected(i,j);
+			dirtyEffected(arcs, i,j);
 		}
 	}
 
-	private void columnCondition(int i, int j){
+	private void columnCondition(Arc[][] arcs, int i, int j){
 		boolean modified = false;
 		for(int r=0;r<BOARD_SIZE;r++){
 			if(i == r){
@@ -77,11 +103,11 @@ public class SudokuSolver {
 			}
 		}
 		if(modified){
-			dirtyEffected(i,j);
+			dirtyEffected(arcs, i,j);
 		}
 	}
 
-	private void rowCondition(int i, int j){
+	private void rowCondition(Arc[][] arcs, int i, int j){
 		boolean modified = false;
 		for(int r=0;r<BOARD_SIZE;r++){
 			if(j == r){
@@ -92,7 +118,7 @@ public class SudokuSolver {
 			}
 		}
 		if(modified){
-			dirtyEffected(i,j);
+			dirtyEffected(arcs, i,j);
 		}
 	}
 
@@ -126,9 +152,9 @@ public class SudokuSolver {
 	/*
 	 * dirtyEffected marks all arcs that have had a dependent arc [i][j] modified.
 	 * @param i row of the updated arc
-	 * @param j colum of the updated arc
+	 * @param j column of the updated arc
 	 */
-	private void dirtyEffected(int i, int j){
+	private Arc[][] dirtyEffected(Arc[][] arcs, int i, int j){
 		for(int k=0;k<BOARD_SIZE;k++){
 			if(k!=j){
 				arcs[i][k].setDirty(true);
@@ -145,6 +171,7 @@ public class SudokuSolver {
 				}
 			}
 		}
+        return arcs;
 	}		
 
 
@@ -154,10 +181,10 @@ public class SudokuSolver {
 	 * @param board 2d int array representing a sudoku board
 	 * @return true if the board is solved, false otherwise
 	 */
-	private boolean complete(int [][]board){
+	private boolean complete(Arc[][] board){
 		for(int i=0;i<BOARD_SIZE;i++){
 			for(int j=0;j<BOARD_SIZE;j++){
-				if(board[i][j] == 0){
+				if(board[i][j].value == 0){
 					return false;
 				}
 			}
@@ -171,7 +198,7 @@ public class SudokuSolver {
 	 * @param board 2d int array representing a sudoku board
 	 * @return true if the board is solved, false otherwise
 	 */
-	private boolean clean(){
+	private boolean isClean(Arc[][] arcs){
 		for(int i=0;i<BOARD_SIZE;i++){
 			for(int j=0;j<BOARD_SIZE;j++){
 				if(arcs[i][j].getDirty()){
@@ -186,12 +213,12 @@ public class SudokuSolver {
 	 * Intalize a set of arcs for each of squares on the sudoku board. The board is intalized with all arcs containing the values [1..9], then if the board contains a vaild set number the arc is trimmed down to the one coreect value. All of the arcs which were effected by the modification are set to dirty
 	 * @param board the sudoku board with preset values
 	 */
-	private void initArcs(int [][]board){
-		arcs = new Arc[BOARD_SIZE][BOARD_SIZE];
+	private Arc[][] initArcs(int[][] board){
+		Arc[][] arcs = new Arc[BOARD_SIZE][BOARD_SIZE];
 		for(int i=0;i<BOARD_SIZE;i++){
 			for(int j=0;j<BOARD_SIZE;j++){
 				//Init all new arcs
-				arcs[i][j] = new Arc(BOARD_SIZE);
+				arcs[i][j] = new Arc(board[i][j], BOARD_SIZE);
 			}
 		}
 		for(int i=0;i<BOARD_SIZE;i++){
@@ -204,19 +231,25 @@ public class SudokuSolver {
 							arcs[i][j].dom.remove(new Integer(k + 1));
 						}
 					}
-					dirtyEffected(i,j);
+					arcs = dirtyEffected(arcs, i,j);
 				}
 			}
 		}
+        return arcs;
 	}
 	
-	private void printArcs(){
+	private void printArcs(Arc[][] arcs){
 		for(int i=0;i<BOARD_SIZE;i++){
 			for(int j=0;j<BOARD_SIZE;j++){
 				System.out.println(arcs[i][j].toString());
 			}
 		}
 	}
+
+    private Arc[][][] splitDomain(Arc[][] arcs){
+        // split the domain by finding
+        return null;
+    }
 
 
 }

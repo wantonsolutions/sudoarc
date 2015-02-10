@@ -4,8 +4,10 @@ import java.util.Iterator;
 class Arc {
 	public ArrayList<Integer> dom;
 	private boolean dirty;
+    public int value;
 
-	public Arc (int domainSize){
+	public Arc (int value, int domainSize){
+        this.value = value;
 		dom = new ArrayList<Integer>(domainSize);
 		dirty = false;
 		for(int i=1;i<=domainSize;i++){
@@ -34,6 +36,3 @@ class Arc {
 		return arc;
 	}	
 }
-
-
-
