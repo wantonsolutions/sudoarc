@@ -38,8 +38,16 @@ class Arc {
 					d2[i-this.dom.size()/2] = this.dom.get(i).intValue();
 				}
 			}
-		div[0] = new Arc(this.value, d1, this.dom.size()/2);
-		div[1] = new Arc(this.value, d2, this.dom.size()/2 + this.dom.size() %2);
+			div[0] = new Arc(this.value, d1, this.dom.size()/2);
+			div[1] = new Arc(this.value, d2, this.dom.size()/2 + this.dom.size() %2);
+			if(div[0].dom.size() == 1){
+				System.out.println("setting split value " + div[0].dom.get(0).intValue());
+				div[0].value = div[0].dom.get(0).intValue();
+			}
+			if(div[1].dom.size() == 1){
+				div[1].value = div[1].dom.get(0).intValue();
+				System.out.println("setting split value " + div[1].dom.get(0).intValue());
+			}
 		}
 		return div;
 	}
