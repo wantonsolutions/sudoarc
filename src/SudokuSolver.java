@@ -31,7 +31,7 @@ public class SudokuSolver {
         while(!stack.empty()){
             Arc[][] arcs = stack.pop();
 
-            // make current board consistent
+            // make current arc array consistent
             while(!isClean(arcs)){
                 arcConsistency(arcs);
             }
@@ -58,7 +58,7 @@ public class SudokuSolver {
                 stack.push(leftArcs);
                 stack.push(rightArcs);
 
-                return arcToIntArray(arcs);
+                continue;
             } else{
                 return arcToIntArray(arcs);
             }
@@ -261,7 +261,7 @@ public class SudokuSolver {
     private int[] findLargeDomain(Arc[][] arcs){
         int[] returnArray = new int[2];
         for(int i=0; i<BOARD_SIZE; i++){
-            for(int j=0; j<BOARD_SIZE; i++){
+            for(int j=0; j<BOARD_SIZE; j++){
                 if(arcs[i][j].dom.size() > 1){
                     returnArray[0] = i;
                     returnArray[1] = j;
@@ -275,7 +275,7 @@ public class SudokuSolver {
     private int[][] arcToIntArray(Arc[][] arcs){
         int[][] returnArray = new int[BOARD_SIZE][BOARD_SIZE];
         for(int i=0; i<BOARD_SIZE; i++) {
-            for (int j=0; j < BOARD_SIZE; i++) {
+            for (int j=0; j<BOARD_SIZE; j++) {
                 returnArray[i][j] = arcs[i][j].value;
             }
         }
