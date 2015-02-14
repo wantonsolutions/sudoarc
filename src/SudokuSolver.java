@@ -172,8 +172,31 @@ public class SudokuSolver {
 
 	}
 	////////////////////////UNSUPPORTED CONSISTANCY/////////////////// 
-	
+	/*
 
+	private ArrayList<Integer> not9Row(Arc[][] arcs, ArrayList<Integer> n, int row, int col){
+		ArrayList<Integer> nr;
+		ArrayList<Integer> ret;
+		for(int i = 0;i<9;i++){
+			ret.add(new Integer(i));
+		}
+		for(int i=0;i<9;i++){
+			if( !(col/3 == i/3) ){
+				nr = not9(arcs[row][i].dom);
+				for(int j = 0;j<nr.size();j++){
+
+		}
+	 //returns an arraylist of all values 1 - 9 not containied in a
+	private ArrayList<Integer> not9(ArrayList<Integer> a){
+		ArrayList<Integer> i = new ArrayList<Integer>();
+		for(int i = 0;i<9;i++){
+			if(!a.contains(new Integer(i)){
+				i.add(new Integer(i));
+			}
+		}
+		return i;
+	}
+*/
 
 	///////////////////////END UNSUPPORTED CONSISTANCY/////////////
 	/*
