@@ -1,4 +1,7 @@
 import java.util.Stack;
+import java.util.Random;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Place for your code.
@@ -41,7 +44,7 @@ public class SudokuSolver {
 			if(!totalConsistancy(arcs)){
 				sampler++;
 				if((sampler%SAMPLE_FREQUENCY) == 0){
-					printBoard(arcs);
+			//		printBoard(arcs);
 				}
 				//System.out.println("bad split dropping board");
 				continue;
@@ -49,37 +52,24 @@ public class SudokuSolver {
 
 			// check if domain must be split
 			if(!complete(arcs)){
-				//System.out.println("Not complete, requires domain split");
+				int [] split = splitDomain(arcs); // find a splitable domain at random
+				int row = split[0];
+				int col = split[1];
+				Arc[] splitArc = arcs[row][col].split();
+				dirtyEffected(arcs,row,col);
+				
+				Arc[][] leftArcs = clone(arcs);
+				leftArcs[row][col] = splitArc[0];
+				Arc[][] rightArcs= clone(arcs);
+				rightArcs[row][col] = splitArc[1];
 
-				// find the arc position greater with domain size greater than 1
-				// shouldn't need a null check because we do a complete check beforehand
-				boolean[][] splits = splitableDomains(arcs);
-			       	for(int i =0;i<BOARD_SIZE;i++){
-					for(int j =0;j<BOARD_SIZE;j++){
-						//push domains in decreasing order of size
-						for(int k=BOARD_SIZE;k>1;k--){
-							if(splits[i][j] && arcs[i][j].dom.size() == k){
-								Arc[] splitArc = arcs[i][j].split();
-								dirtyEffected(arcs, i,j);
-								// create the left and right arc arrays
-								Arc[][] leftArcs = clone(arcs);
-								leftArcs[i][j] = splitArc[0];
-								Arc[][] rightArcs= clone(arcs);
-								rightArcs[i][j] = splitArc[1];
-
-								if(consistant(leftArcs,i,j)){
-									//System.out.println("push left");
-									stack.push(leftArcs);
-								}
-								if(consistant(rightArcs,i,j)){
-									//System.out.println("push right");
-									stack.push(rightArcs);
-								}
-								splits[i][j] = false;
-							}
-						}
-					}
+				if(consistant(leftArcs,row,col)){
+					stack.push(leftArcs);
 				}
+				if(consistant(rightArcs,row,col)){
+					stack.push(rightArcs);
+				}
+
 			} else {
 				return arcToIntArray(arcs);
 			}
@@ -157,6 +147,7 @@ public class SudokuSolver {
 		}
 	}
 
+
 	/**
 	 *notEqualConsistancy makes two squares not equal consistant, the arcs are modifed so that arc a is trimmed to be consistant with arc b and not the other way around.
 	 @param Arc a, the arc being made consistant
@@ -180,7 +171,11 @@ public class SudokuSolver {
 		return modified;
 
 	}
+	////////////////////////UNSUPPORTED CONSISTANCY/////////////////// 
+	
 
+
+	///////////////////////END UNSUPPORTED CONSISTANCY/////////////
 	/*
 	 * dirtyEffected marks all arcs that have had a dependent arc [i][j] modified.
 	 * @param i row of the updated arc
@@ -351,6 +346,25 @@ public class SudokuSolver {
 		return splits;
 	}
 
+	private int[] splitDomain(Arc[][] arcs){
+		int[] split = new int[2];
+		Random randomGenerator = new Random();
+		int row = randomGenerator.nextInt(9);
+		int col = randomGenerator.nextInt(9);
+		//find the next splitable location
+		while(arcs[row][col].dom.size() < 2){
+			row++;
+			if( row == 9){
+				col++;
+			}
+			row = row%9;
+			col = col%9;
+		}
+		split[0] = row;
+		split[1] = col;
+		return split;
+	}
+
 	private void printArcs(Arc[][] arcs){
 		for(int i=0;i<BOARD_SIZE;i++){
 			for(int j=0;j<BOARD_SIZE;j++){
@@ -389,5 +403,89 @@ public class SudokuSolver {
 		System.out.println("\n");
 	}
 
+	public class Arc {
+		public ArrayList<Integer> dom;
+		private boolean dirty;
+		public int value;
+
+		public Arc (int value, int domainSize){
+		this.value = value;
+			dom = new ArrayList<Integer>(domainSize);
+			dirty = false;
+			for(int i=1;i<=domainSize;i++){
+				dom.add(i);
+			}
+		}
+
+		public Arc (int value, int []domain, int domainSize){
+			this.value = value;
+			dom = new ArrayList<Integer>(domainSize);
+			dirty=false;
+			for(int i =0;i<domainSize;i++){
+				dom.add(domain[i]);
+			}
+		}
+
+		public Arc clone(){
+			Integer[] d = this.dom.toArray(new Integer[this.dom.size()]);
+			int [] di = new int[this.dom.size()];
+			for(int i=0;i<this.dom.size();i++){
+				di[i] = d[i].intValue();
+			}
+			Arc cl = new Arc(this.value,di,this.dom.size());
+			cl.setDirty(this.getDirty());
+			return cl;
+		}
+		
+		public Arc[] split() {
+			Arc[] div = new Arc[2];
+			if(this.dom.size() <= 1){
+				return null;
+			} else {
+				int []d1 = new int [this.dom.size()/2];
+				int []d2 = new int [this.dom.size()/2 + (this.dom.size() %2)];
+				for(int i =0;i<this.dom.size();i++){
+					if(i<this.dom.size()/2){
+						d1[i] = this.dom.get(i).intValue();
+					} else {
+						d2[i-this.dom.size()/2] = this.dom.get(i).intValue();
+					}
+				}
+				div[0] = new Arc(this.value, d1, this.dom.size()/2);
+				div[1] = new Arc(this.value, d2, this.dom.size()/2 + (this.dom.size() %2));
+				if(div[0].dom.size() == 1){
+					div[0].value = div[0].dom.get(0).intValue();
+				}
+				if(div[1].dom.size() == 1){
+					div[1].value = div[1].dom.get(0).intValue();
+				}
+				//System.out.println("left " + div[0].toString() + "\tright" + div[1].toString());
+			}
+			return div;
+		}
+
+
+
+		public void setDirty(boolean dirty){
+			this.dirty = dirty;
+		}
+
+		public boolean getDirty(){
+			return this.dirty;
+		}
+
+		public String toString(){
+			String arc = "("+this.value+")[";
+			Iterator itr = dom.iterator();
+			while(itr.hasNext()){
+				arc = arc + itr.next().toString();
+				if(itr.hasNext()){
+					arc = arc + " ";
+				}
+			}
+			arc = arc + "]";
+			return arc;
+		}	
+	}
 
 }

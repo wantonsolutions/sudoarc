@@ -27,18 +27,16 @@ public class SudokuTester {
 		test(acSolver, "easy", true, true); // Time: 0s (bonus 0s)
 		// This Sudoku can not be solved by AC alone, it requires domain splitting.
 		test(acSolver, "hard", true, true); // Time: 0s (bonus 0s)
-		/*
 		// Evil level Sudoku from www.websudoku.com, it is difficult for people, easy for AC+domain splitting
 		test(acSolver, "evil", true, false); // Time: 0s (bonus 0s)
 		// Sudoku from Sudoku enthusiast (http://www.flickr.com/photos/npcomplete/2384354604/), requires domain splitting
-		test(acSolver, "starBurstLeo", true, false); // Time: 0s (bonus 0s)
+		//test(acSolver, "starBurstLeo", true, false); // Time: 0s (bonus 0s)
 
 		/**
 		 * Somewhat harder Sudokus, supposedly they pose a challenge to Sudokus solvers. They all require domain splitting. Taken from
 		 * http://en.wikipedia.org/wiki/Algorithmics_of_sudoku . Do not pay much attention to analysis presented in this Wikipedia article, it is not
 		 * very scientific.
 		 */
-		/*//////////////////////
 		test(acSolver, "easterMonster", true, false); // Time: 1s (bonus 4s)
 		test(acSolver, "tarek071223170000-052", true, false); // Time: 3s (bonus 5s)
 		test(acSolver, "goldenNugget", true, false); // Time: 6s (bonus 7s)
@@ -48,7 +46,6 @@ public class SudokuTester {
 		 * yielding valid Sudokus. They turn out to be quite hard to solve by AC+domain splitting (think why?), but specialized Sudoku solvers (for
 		 * example http://www.sudokusolver.co.uk/) can solve them immediately.
 		 */
-		/*///////////////////
 		test(acSolver, "minimum1", true, false); // Time: 47s (bonus 166s)
 		test(acSolver, "minimum50", true, false); // Time: 59s (bonus 90s)
 
@@ -56,15 +53,13 @@ public class SudokuTester {
 		 * A Sudoku that is exceptionally hard for brute-force algorithms. It is also challenging for AC with domain splitting (think why?). We are
 		 * not going to test your AC algorithms on this instance :-). Source: http://en.wikipedia.org/wiki/Algorithmics_of_sudoku
 		 */
-		// test(acSolver, "nearWorstCase", true, false); // Time: 1275s (bonus 1275s)
+		 test(acSolver, "nearWorstCase", true, false); // Time: 1275s (bonus 1275s)
 		
 		/** Invalid Sudokus - bonus question */
-		/*/////////////////////////
 		// This Sudoku is invalid because it has no solutions - exception should be thrown.
 		test(acSolver, "noSolutions", false, false); // Time: bonus 0s
 		// This Sudoku is invalid because it has multiple (two) solutions - exception should be thrown.
 		test(acSolver, "twoSolutions", false, false); // Time: bonus 0s
-		*/
 	}
 
 	/**
